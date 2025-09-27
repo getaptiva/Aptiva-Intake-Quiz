@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GetAptiva - Automation Quiz</title>
+  <meta name="description" content="Stop playing games. Automate your business or stay broke.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #000000;
+      --gold: #FFD700;
+      --gold-dim: rgba(255, 215, 0, 0.7);
+      --gold-faint: rgba(255, 215, 0, 0.08);
+      --white: #ffffff;
+      --gray: #999999;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: "Space Grotesk", sans-serif;
+      line-height: 1.4;
+      min-height: 100vh;
+      cursor: crosshair;
+      overflow-x: hidden;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 25px 25px, var(--gold) 2px, transparent 0),
+        radial-gradient(circle at 75px 75px, var(--gold) 1px, transparent 0);
+      background-size: 50px 50px;
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1;
+      animation: staticNoise 0.8s infinite;
+    }
+
+    @keyframes staticNoise {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(-1px, 1px); }
+      50% { transform: translate(1px, -1px); }
+      75% { transform: translate(-1px, -1px); }
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      transform: rotate(-0.5deg);
+    }
+
+    .logo {
+      font-family: "Anton", "Impact", "Arial Black", sans-serif;
+      font-size: clamp(4rem, 12vw, 10rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--bg);
+      background: var(--gold);
+      padding: 25px 45px;
+      margin-bottom: 12px;
+      position: relative;
+      display: inline-block;
+      font-stretch: condensed;
+      transform: rotate(-1deg);
+      border-radius: 15px 5px 20px 8px / 8px 25px 12px 18px;
+      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+    }
+    
+    .logo::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: inherit;
+      border-radius: inherit;
+      transform: rotate(0.5deg) scale(1.02);
+      z-index: -1;
+      opacity: 0.8;
+    }
+
+    .tagline {
+      display: none;
+    }
+
+    /* Quiz Card */
+    .quiz-card {
+      background: var(--gold-faint);
+      border: 3px solid rgba(255, 215, 0, 0.4);
+      padding: 40px;
+      transform: rotate(0.3deg);
+      position: relative;
+    }
+
+    .quiz-card::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      transform: rotate(-0.6deg);
+      pointer-events: none;
+    }
+
+    .quiz-intro {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .quiz-title {
+      font-family: "Staatliches", sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 18px;
+      transform: skew(-2deg);
+      line-height: 0.9;
+    }
+
+    .quiz-subtitle {
+      font-size: 1.05rem;
+      color: var(--gold-dim);
+      max-width: 500px;
+      margin: 0 auto;
+      font-weight: 600;
+      transform: skew(-0.3deg);
+    }
+
+    .highlight {
+      background: var(--gold);
+      color: var(--bg);
+      padding: 4px 12px;
+      display: inline-block;
+      transform: rotate(-1.5deg);
+      font-weight: 700;
+      margin: 0 6px;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin: 28px 0;
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: #111111;
+      border: 3px solid var(--gold);
+      overflow: hidden;
+      transform: skew(-3deg);
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--gold), #fff700, var(--gold));
+      transition: width 0.8s ease;
+      position: relative;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -10px;
+      width: 10px;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.6));
+      animation: progressGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes progressGlow {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    .progress-text {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold-dim);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    /* Quiz Steps */
+    .quiz-step {
+      display: none;
+      animation: stepGlitch 0.6s ease-out;
+    }
+
+    .quiz-step.active {
+      display: block;
+    }
+
+    @keyframes stepGlitch {
+      0% {
+        opacity: 0;
+        transform: translateX(-30px);
+        filter: blur(3px);
+      }
+      30% {
+        filter: blur(1px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+        filter: blur(0);
+      }
+    }
+
+    .step-counter {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--gold-dim);
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    .question {
+      font-family: "Staatliches", sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 28px;
+      transform: skew(-1deg);
+      line-height: 1.1;
+    }
+
+    /* Options */
+    .options {
+      display: grid;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .option {
+      border: 3px solid rgba(255, 215, 0, 0.3);
+      padding: 20px 25px;
+      background: transparent;
+      color: var(--white);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: left;
+      transform: skew(-0.5deg);
+      position: relative;
+      letter-spacing: 0.02em;
+    }
+
+    .option::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 100%;
+      background: rgba(255, 215, 0, 0.1);
+      transition: width 0.4s ease;
+      z-index: -1;
+    }
+
+    .option:hover {
+      border-color: var(--gold);
+      background: rgba(255, 215, 0, 0.05);
+      transform: skew(-0.5deg) scale(1.02);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+    }
+
+    .option:hover::before {
+      width: 100%;
+    }
+
+    .option.selected {
+      border-color: #fff700;
+      background: rgba(255, 215, 0, 0.15);
+      transform: skew(0deg);
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+    }
+
+    .option.selected::before {
+      width: 100%;
+    }
+
+    .option input {
+      display: none;
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 30px;
+    }
+
+    .btn {
+      background: var(--gold);
+      color: var(--bg);
+      border: 3px solid var(--gold);
+      padding: 15px 30px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      transform: skew(-2deg);
+      position: relative;
+    }
+
+    .btn:hover {
+      background: transparent;
+      color: var(--gold);
+      transform: skew(-2deg) scale(1.05);
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+    }
+
+    .btn.secondary {
+      background: transparent;
+      color: var(--gold);
+    }
+
+    .btn.secondary:hover {
+      background: var(--gold);
+      color: var(--bg);
+    }
+
+    /* Results */
+    .results {
+      display: none;
+      margin-top: 35px;
+    }
+
+    .results.active {
+      display: block;
+      animation: resultsReveal 0.8s ease-out;
+    }
+
+    @keyframes resultsReveal {
+      0% {
+        opacity: 0;
+        transform: scale(0.95);
+        filter: blur(5px);
+      }
+      50% {
+        filter: blur(2px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+      }
+    }
+
+    .results-title {
+      font-family: "Bebas Neue", cursive;
+      font-size: clamp(2rem, 4vw, 3rem);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 20px;
+      color: var(--gold);
+      transform: skew(-1deg);
+    }
+
+    .results-content {
+      background: rgba(255, 215, 0, 0.06);
+      border: 3px solid rgba(255, 215, 0, 0.4);
+      padding: 30px;
+      margin-bottom: 25px;
+      transform: rotate(-0.2deg);
+    }
+
+    .score-badge {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--bg);
+      padding: 8px 16px;
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      transform: rotate(-1deg);
+      letter-spacing: 0.08em;
+    }
+
+    .recommendations {
+      margin-top: 25px;
+    }
+
+    .recommendations ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .recommendations li {
+      padding: 12px 0;
+      border-left: 4px solid var(--gold);
+      padding-left: 20px;
+      margin-bottom: 15px;
+      font-weight: 500;
+      transform: skew(-0.2deg);
+    }
+
+    /* Email Capture */
+    .email-capture {
+      background: rgba(255, 215, 0, 0.08);
+      border: 3px solid rgba(255, 215, 0, 0.5);
+      padding: 30px;
+      text-align: center;
+      transform: rotate(0.2deg);
+    }
+
+    .capture-title {
+      font-family: "Bebas Neue", cursive;
+      font-size: 1.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 15px;
+      color: var(--gold);
+      transform: skew(-0.5deg);
+    }
+
+    .email-form {
+      display: flex;
+      gap: 15px;
+      max-width: 450px;
+      margin: 25px auto 0;
+      flex-wrap: wrap;
+    }
+
+    .email-input {
+      flex: 1;
+      min-width: 280px;
+      background: #0a0a0a;
+      border: 3px solid rgba(255, 215, 0, 0.4);
+      padding: 16px 20px;
+      color: var(--white);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1rem;
+      font-weight: 600;
+      transform: skew(-0.5deg);
+    }
+
+    .email-input::placeholder {
+      color: var(--gray);
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+    }
+
+    .email-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      background: rgba(255, 215, 0, 0.05);
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+    }
+
+    .submit-message {
+      margin-top: 20px;
+      font-size: 0.95rem;
+      color: var(--gold-dim);
+      font-weight: 600;
+    }
+
+    /* Social Proof */
+    .social-proof {
+      margin-top: 30px;
+      padding-top: 25px;
+      border-top: 2px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .proof-item {
+      font-size: 0.9rem;
+      color: var(--gold-dim);
+      margin-bottom: 10px;
+      font-weight: 500;
+      transform: skew(-0.2deg);
+    }
+
+    .proof-item strong {
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    /* Graffiti marks */
+    .mark {
+      position: fixed;
+      font-size: 1.2rem;
+      color: rgba(255, 215, 0, 0.2);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .mark-1 { top: 15%; left: 5%; animation: markFloat1 7s ease-in-out infinite; }
+    .mark-2 { top: 35%; right: 8%; animation: markFloat2 9s ease-in-out infinite; }
+    .mark-3 { bottom: 25%; left: 10%; animation: markFloat3 8s ease-in-out infinite; }
+    .mark-4 { top: 60%; right: 12%; animation: markFloat4 6s ease-in-out infinite; }
+
+    @keyframes markFloat1 {
+      0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.2; }
+      50% { transform: rotate(45deg) scale(1.2); opacity: 0.4; }
+    }
+
+    @keyframes markFloat2 {
+      0%, 100% { transform: rotate(0deg) translateY(0); opacity: 0.2; }
+      50% { transform: rotate(-30deg) translateY(-15px); opacity: 0.3; }
+    }
+
+    @keyframes markFloat3 {
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.2; }
+      50% { transform: scale(1.1) rotate(90deg); opacity: 0.4; }
+    }
+
+    @keyframes markFloat4 {
+      0%, 100% { transform: translateX(0) rotate(0deg); opacity: 0.2; }
+      50% { transform: translateX(-10px) rotate(180deg); opacity: 0.3; }
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .quiz-card {
+        padding: 25px;
+        transform: rotate(0.1deg);
+      }
+
+      .email-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .email-input {
+        min-width: auto;
+      }
+
+      .options {
+        gap: 12px;
+      }
+
+      .option {
+        padding: 16px 20px;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body::before,
+      .progress-fill::after,
+      .mark {
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Graffiti marks -->
+  <div class="mark mark-1">✦</div>
+  <div class="mark mark-2">◆</div>
+  <div class="mark mark-3">▲</div>
+  <div class="mark mark-4">●</div>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="logo">Aptiva</h1>
+      <p class="tagline">Automate your business</p>
+    </header>
+
+    <!-- Quiz Card -->
+    <main class="quiz-card">
+      <!-- Intro -->
+      <div class="quiz-intro">
+        <h2 class="quiz-title">Automate Your Business in 5 Questions</h2>
+        <p class="quiz-subtitle">Build your automation roadmap by answering 5 simple questions.</p>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-container">
+        <div class="progress-text">Intelligence Gathering: <span id="current-step">1</span>/5</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="quiz-step active" data-step="1">
+        <div class="step-counter">Question 1/5</div>
+        <h3 class="question">What kind of operation are you running?</h3>
+        <div class="options">
+          <label class="option">
+            <input type="radio" name="business_type" value="local_service">
+            <span>Local Service — contractors, agencies, consultants</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="business_type" value="ecommerce">
+            <span>E-commerce / product brand</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="business_type" value="b2b_saas">
+            <span>B2B / SaaS / biz services</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="business_type" value="creator_coach">
+            <span>Creator / courses / coaching</span>
+          </label>
+        </div>
+        <div class="nav">
+          <div></div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="quiz-step" data-step="2">
+        <div class="step-counter">Question 2/5</div>
+        <h3 class="question">What's killing your time right now?</h3>
+        <div class="options">
+          <label class="option">
+            <input type="radio" name="bottleneck" value="lead_generation">
+            <span>Drowning in lead gen / prospecting</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="bottleneck" value="follow_ups">
+            <span>Follow-ups keep slipping through</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="bottleneck" value="client_onboarding">
+            <span>Client onboarding is a manual maze</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="bottleneck" value="scheduling_payments">
+            <span>Scheduling + payments are chaos</span>
+          </label>
+        </div>
+        <div class="nav">
+          <button class="btn secondary" onclick="goToStep(1)">← Back</button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="quiz-step" data-step="3">
+        <div class="step-counter">Question 3/5</div>
+        <h3 class="question">Monthly revenue band?</h3>
+        <div class="options">
+          <label class="option">
+            <input type="radio" name="revenue" value="under_5k">
+            <span>Under $5k — building</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="revenue" value="5k_15k">
+            <span>$5k—$15k — growing</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="revenue" value="15k_50k">
+            <span>$15k—$50k — scaling</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="revenue" value="over_50k">
+            <span>$50k+ — optimizing</span>
+          </label>
+        </div>
+        <div class="nav">
+          <button class="btn secondary" onclick="goToStep(2)">← Back</button>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="quiz-step" data-step="4">
+        <div class="step-counter">Question 4/5</div>
+        <h3 class="question">Daily manual busywork?</h3>
+        <div class="options">
+          <label class="option">
+            <input type="radio" name="manual_time" value="under_2hrs">
+            <span>Under 2 hours</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="manual_time" value="2_4hrs">
+            <span>2—4 hours</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="manual_time" value="4_6hrs">
+            <span>4—6 hours</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="manual_time" value="over_6hrs">
+            <span>6+ hours</span>
+          </label>
+        </div>
+        <div class="nav">
+          <button class="btn secondary" onclick="goToStep(3)">← Back</button>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="quiz-step" data-step="5">
+        <div class="step-counter">Question 5/5</div>
+        <h3 class="question">What have you tried so far?</h3>
+        <div class="options">
+          <label class="option">
+            <input type="radio" name="previous_tools" value="none">
+            <span>Nothing yet — new to automation</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="previous_tools" value="basic_tools">
+            <span>Basics (Mailchimp, Calendly)</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="previous_tools" value="zapier_make">
+            <span>Zapier / Make.com</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="previous_tools" value="custom_solutions">
+            <span>Custom / enterprise tools</span>
+          </label>
+        </div>
+        <div class="nav">
+          <button class="btn secondary" onclick="goToStep(4)">← Back</button>
+          <button class="btn" onclick="showResults()">Access Intel →</button>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="results" id="results">
+        <h3 class="results-title">Your Battle Plan</h3>
+        <div class="results-content" id="results-content">
+          <!-- Dynamic content will be inserted here -->
+        </div>
+
+        <!-- Email Capture -->
+        <div class="email-capture">
+          <h4 class="capture-title">Access Your Classified Intel</h4>
+          <p>We'll send your battle plan + 3 quick wins. No spam, ever.</p>
+          
+          <form class="email-form" id="email-form" onsubmit="submitEmail(event)">
+            <!-- Hidden fields for quiz data -->
+            <input type="hidden" id="hidden-business-type" name="business_type">
+            <input type="hidden" id="hidden-bottleneck" name="bottleneck">
+            <input type="hidden" id="hidden-revenue" name="revenue">
+            <input type="hidden" id="hidden-manual-time" name="manual_time">
+            <input type="hidden" id="hidden-previous-tools" name="previous_tools">
+            <input type="hidden" id="hidden-score" name="lead_score">
+            
+            <input type="email" class="email-input" name="email" placeholder="you@business.com" required>
+            <button type="submit" class="btn">Send Intel</button>
+          </form>
+          
+          <div class="submit-message" id="submit-message"></div>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="social-proof">
+          <div class="proof-item">Local contractor: <strong>no-shows down 31%</strong> with deposit-gated scheduling</div>
+          <div class="proof-item">Coaching firm: <strong>reply rate +42%</strong> with auto-followups + stop-on-reply logic</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    const totalSteps = 5;
+    let quizData = {};
+
+    // Initialize quiz
+    function initQuiz() {
+      updateProgress();
+      setupOptionHandlers();
+    }
+
+    // Setup option click handlers
+    function setupOptionHandlers() {
+      document.querySelectorAll('.option').forEach(option => {
+        option.addEventListener('click', function() {
+          const parent = this.parentElement;
+          const step = this.closest('.quiz-step');
+          const stepNumber = parseInt(step.getAttribute('data-step'));
+          
+          // Remove selected from siblings
+          parent.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+          
+          // Add selected to clicked option with glitch effect
+          this.classList.add('selected');
+          this.querySelector('input').checked = true;
+          
+          // Glitch effect
+          this.style.transform = 'skew(-2deg) scale(1.02)';
+          setTimeout(() => {
+            this.style.transform = this.classList.contains('selected') ? 'skew(0deg)' : 'skew(-0.5deg)';
+          }, 200);
+          
+          // Auto-advance (except on last step)
+          if (stepNumber < totalSteps) {
+            setTimeout(() => {
+              goToStep(stepNumber + 1);
+            }, 600);
+          }
+        });
+      });
+    }
+
+    // Navigate to specific step
+    function goToStep(stepNumber) {
+      if (stepNumber < 1 || stepNumber > totalSteps) return;
+      
+      // Hide all steps
+      document.querySelectorAll('.quiz-step').forEach(step => {
+        step.classList.remove('active');
+      });
+      
+      // Show target step
+      document.querySelector(`[data-step="${stepNumber}"]`).classList.add('active');
+      
+      currentStep = stepNumber;
+      updateProgress();
+    }
+
+    // Update progress bar
+    function updateProgress() {
+      const progressPercent = (currentStep / totalSteps) * 100;
+      document.getElementById('progress-fill').style.width = progressPercent + '%';
+      document.getElementById('current-step').textContent = currentStep;
+    }
+
+    // Get selected value for a form field
+    function getSelectedValue(name) {
+      const selected = document.querySelector(`input[name="${name}"]:checked`);
+      return selected ? selected.value : null;
+    }
+
+    // Collect all quiz data
+    function collectQuizData() {
+      return {
+        business_type: getSelectedValue('business_type'),
+        bottleneck: getSelectedValue('bottleneck'),
+        revenue: getSelectedValue('revenue'),
+        manual_time: getSelectedValue('manual_time'),
+        previous_tools: getSelectedValue('previous_tools')
+      };
+    }
+
+    // Validate all questions answered
+    function validateQuiz() {
+      const data = collectQuizData();
+      return Object.values(data).every(value => value !== null);
+    }
+
+    // Calculate lead score
+    function calculateLeadScore(data) {
+      let score = 0;
+      
+      // Revenue scoring
+      const revenueScores = {
+        'under_5k': 10,
+        '5k_15k': 20,
+        '15k_50k': 30,
+        'over_50k': 40
+      };
+      score += revenueScores[data.revenue] || 0;
+      
+      // Manual time scoring
+      const timeScores = {
+        'under_2hrs': 10,
+        '2_4hrs': 20,
+        '4_6hrs': 30,
+        'over_6hrs': 40
+      };
+      score += timeScores[data.manual_time] || 0;
+      
+      // Previous tools experience
+      const toolScores = {
+        'none': 15,
+        'basic_tools': 10,
+        'zapier_make': 20,
+        'custom_solutions': 25
+      };
+      score += toolScores[data.previous_tools] || 0;
+      
+      return Math.min(score, 100);
+    }
+
+    // Generate personalized recommendations
+    function generateRecommendations(data, score) {
+      const businessTypes = {
+        'local_service': 'Local Service Business',
+        'ecommerce': 'E-commerce Business', 
+        'b2b_saas': 'B2B/SaaS Business',
+        'creator_coach': 'Creator/Coach Business'
+      };
+
+      const bottleneckSolutions = {
+        'lead_generation': [
+          'Set up automated lead capture forms with instant follow-up sequences',
+          'Create lead scoring systems to prioritize your hottest prospects',
+          'Build referral automation to turn customers into lead generators'
+        ],
+        'follow_ups': [
+          'Deploy email sequences that stop when prospects reply',
+          'Set up SMS follow-ups for high-value leads',
+          'Create automated nurture campaigns based on lead behavior'
+        ],
+        'client_onboarding': [
+          'Build one-click welcome packets with contracts and invoices',
+          'Automate project kickoff scheduling and data collection',
+          'Create client portal access with automated tutorials'
+        ],
+        'scheduling_payments': [
+          'Gate calendar booking behind qualification questions',
+          'Automate payment collection with retry sequences',
+          'Set up deposit requirements to reduce no-shows'
+        ]
+      };
+
+      const recommendations = bottleneckSolutions[data.bottleneck] || [];
+      
+      let priority = 'Standard';
+      if (score >= 70) priority = 'High Priority';
+      else if (score >= 50) priority = 'Good Fit';
+      else if (score >= 30) priority = 'Moderate Fit';
+
+      return {
+        businessType: businessTypes[data.business_type],
+        priority: priority,
+        score: score,
+        recommendations: recommendations
+      };
+    }
+
+    // Show results
+    function showResults() {
+      if (!validateQuiz()) {
+        alert('Please answer all questions to get your results.');
+        return;
+      }
+
+      quizData = collectQuizData();
+      const score = calculateLeadScore(quizData);
+      const analysis = generateRecommendations(quizData, score);
+
+      // Generate results HTML
+      const resultsHTML = `
+        <div class="score-badge">${analysis.priority} - Score: ${score}/100</div>
+        <p><strong>Business Type:</strong> ${analysis.businessType}</p>
+        <p><strong>Primary Focus:</strong> Based on your answers, you're spending too much time on ${quizData.bottleneck.replace('_', ' ')}. Here's what to automate first:</p>
+        <div class="recommendations">
+          <ul>
+            ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+          </ul>
+        </div>
+        <p><strong>Time to Value:</strong> Most clients see results in 7-14 days with proper implementation.</p>
+      `;
+
+      document.getElementById('results-content').innerHTML = resultsHTML;
+
+      // Update hidden form fields
+      document.getElementById('hidden-business-type').value = quizData.business_type;
+      document.getElementById('hidden-bottleneck').value = quizData.bottleneck;
+      document.getElementById('hidden-revenue').value = quizData.revenue;
+      document.getElementById('hidden-manual-time').value = quizData.manual_time;
+      document.getElementById('hidden-previous-tools').value = quizData.previous_tools;
+      document.getElementById('hidden-score').value = score;
+
+      // Hide quiz steps and show results
+      document.querySelectorAll('.quiz-step').forEach(step => {
+        step.style.display = 'none';
+      });
+      document.getElementById('results').classList.add('active');
+    }
+
+    // Submit email form
+    async function submitEmail(event) {
+      event.preventDefault();
+      
+      const submitMessage = document.getElementById('submit-message');
+      submitMessage.textContent = 'Sending your battle plan...';
+
+      // Prepare data for submission
+      const formData = {
+        timestamp: new Date().toISOString(),
+        business_type: quizData.business_type,
+        bottleneck: quizData.bottleneck,
+        revenue: quizData.revenue,
+        manual_time: quizData.manual_time,
+        previous_tools: quizData.previous_tools,
+        lead_score: calculateLeadScore(quizData),
+        email: document.querySelector('input[name="email"]').value
+      };
+
+      try {
+        // Submit to Google Sheets via Sheet.best
+        const response = await fetch('https://sheet.best/api/sheets/1ALOjhFuzJA18y9u_LtY9G_qKYNd4wHiPo_a8wtqZqhk', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          submitMessage.innerHTML = '<strong>Success!</strong> Check your inbox in 2-3 minutes.';
+          submitMessage.style.color = 'var(--gold)';
+          
+          // Trigger email automation based on lead score
+          triggerEmailAutomation(formData);
+        } else {
+          throw new Error('Submission failed');
+        }
+      } catch (error) {
+        submitMessage.textContent = 'Something went wrong. Please try again.';
+        submitMessage.style.color = '#ff6b6b';
+      }
+    }
+
+    // Trigger different email sequences based on qualification
+    function triggerEmailAutomation(data) {
+      // This will connect to your email automation later
+      // For now, just log the lead score for testing
+      console.log('Lead submitted with score:', data.lead_score);
+      
+      if (data.lead_score >= 70) {
+        console.log('High-value lead - trigger immediate follow-up');
+      } else if (data.lead_score >= 50) {
+        console.log('Warm lead - add to nurture sequence');
+      } else {
+        console.log('Cold lead - add to educational content sequence');
+      }
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', initQuiz);
+  </script>
+</body>
+</html>
+    
